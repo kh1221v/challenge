@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>브레이킹 20일 챌린지</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+:root {
+  --ink: #1a1a2e; --bg: #f5f2ed; --card: #fff;
+  --morning: #c26b6b; --morning-soft: #fdf0f0;
+  --noon: #7c6fcd;    --noon-soft: #ede9fb;
+  --evening: #4a9b7f; --evening-soft: #edf7f3;
+  --night: #2d3561;   --night-soft: #e8ecf8;
+  --gold: #b8975a;
+  --div: #e5e0d8; --muted: #aaa; --sub: #666;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--bg); font-family:'Noto Sans KR',sans-serif; color:var(--ink); min-height:100vh; }
+
+/* 헤더 */
+header { background:var(--ink); padding:28px 20px 22px; text-align:center; }
+header .ey { font-size:10px; letter-spacing:3px; color:var(--gold); text-transform:uppercase; margin-bottom:8px; }
+header h1 { font-family:'Noto Serif KR',serif; font-size:clamp(17px,4vw,23px); font-weight:600; color:#fff; line-height:1.5; margin-bottom:4px; }
+header p { font-size:11px; color:#666; }
+
+/* 진행바 */
+.prog { background:#fff; padding:10px 18px; border-bottom:1px solid var(--div); }
+.prog-top { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-bottom:6px; }
+.prog-top span:last-child { color:var(--noon); font-weight:700; }
+.prog-bar { height:4px; background:var(--div); border-radius:3px; overflow:hidden; }
+.prog-fill { height:100%; background:linear-gradient(90deg,var(--morning),var(--noon),var(--evening)); border-radius:3px; transition:width .4s; }
+
+/* DAY 네비 */
+.day-wrap { background:#fff; border-bottom:1px solid var(--div); overflow-x:auto; scrollbar-width:none; }
+.day-wrap::-webkit-scrollbar { display:none; }
+.day-nav { display:flex; gap:5px; padding:9px 14px; width:max-content; }
+.db { width:34px; height:34px; border-radius:50%; border:1.5px solid var(--div); background:transparent; font-size:11px; font-family:'Noto Sans KR',sans-serif; color:var(--muted); cursor:pointer; transition:all .2s; flex-shrink:0; position:relative; }
+.db.active { background:var(--noon); border-color:var(--noon); color:#fff; font-weight:700; }
+.db.done { border-color:var(--evening); color:var(--evening); }
+.db.done::after { content:'✓'; position:absolute; top:-3px; right:-3px; font-size:8px; background:var(--evening); color:#fff; width:12px; height:12px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+
+/* 오늘의 문장 */
+.quote-card { background:var(--ink); color:#fff; margin:14px 14px 0; border-radius:16px; padding:18px; }
+.qc-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.qc-day { font-size:10px; letter-spacing:2px; color:var(--gold); text-transform:uppercase; }
+.qc-date { font-size:10px; color:#555; }
+.qc-week { font-size:11px; color:#666; margin-bottom:10px; }
+.qc-sent { font-family:'Noto Serif KR',serif; font-size:clamp(13px,3vw,15px); line-height:1.9; border-left:3px solid var(--gold); padding-left:12px; }
+
+/* 시간대 탭 */
+.ttabs { display:flex; background:#fff; border-bottom:1px solid var(--div); position:sticky; top:0; z-index:50; }
+.tt { flex:1; padding:11px 4px 9px; border:none; background:transparent; font-size:11px; font-weight:500; font-family:'Noto Sans KR',sans-serif; color:var(--muted); cursor:pointer; border-bottom:3px solid transparent; transition:all .2s; text-align:center; line-height:1.4; }
+.tt.m.active { color:var(--morning); border-bottom-color:var(--morning); font-weight:700; }
+.tt.n.active { color:var(--noon); border-bottom-color:var(--noon); font-weight:700; }
+.tt.e.active { color:var(--evening); border-bottom-color:var(--evening); font-weight:700; }
+.tt.ni.active { color:var(--night); border-bottom-color:var(--night); font-weight:700; }
+
+.main { max-width:600px; margin:0 auto; padding:16px 14px 60px; }
+.tab-panel { display:none; }
+.tab-panel.visible { display:block; }
+
+/* 섹션 헤더 */
+.sec-hd { display:flex; align-items:center; gap:8px; margin-bottom:14px; }
+.sec-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.sec-title { font-size:13px; font-weight:700; }
+.sec-sub { font-size:11px; color:var(--muted); margin-top:1px; }
+
+/* 질문 블록 — 핵심 */
+.q-block { background:var(--card); border-radius:14px; border:1px solid var(--div); overflow:hidden; margin-bottom:8px; }
+.q-hd { display:flex; align-items:center; gap:10px; padding:13px 15px; }
+.q-ico { font-size:20px; flex-shrink:0; }
+.q-title { font-size:13px; font-weight:700; }
+.q-hint { font-size:11px; color:var(--muted); margin-top:2px; line-height:1.5; }
+.q-body { padding:0 15px 14px; border-top:1px solid var(--div); }
+.q-example { font-size:11px; color:var(--muted); background:var(--bg); border-radius:8px; padding:8px 11px; margin:10px 0 8px; line-height:1.7; }
+.q-example strong { color:var(--sub); }
+textarea.f { width:100%; border:1.5px solid var(--div); border-radius:10px; padding:10px 12px; font-size:14px; font-family:'Noto Sans KR',sans-serif; color:var(--ink); line-height:1.7; resize:none; outline:none; background:#fafafa; transition:border-color .2s; }
+textarea.f:focus { background:#fff; }
+textarea.f.serif { font-family:'Noto Serif KR',serif; line-height:1.9; }
+.char-cnt { text-align:right; font-size:10px; color:var(--muted); margin-top:3px; }
+
+/* 감정 칩 (간소화) */
+.em-chips { display:flex; flex-wrap:wrap; gap:5px; margin:10px 0 8px; }
+.emc { padding:5px 11px; border-radius:20px; border:1.5px solid var(--div); background:transparent; font-size:11px; font-family:'Noto Sans KR',sans-serif; color:var(--sub); cursor:pointer; transition:all .18s; }
+.emc.sv.on { background:var(--morning-soft); border-color:var(--morning); color:var(--morning); font-weight:700; }
+.emc.cr.on { background:var(--evening-soft); border-color:var(--evening); color:var(--evening); font-weight:700; }
+
+/* 믿음 확인 */
+.belief-row { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0; }
+.bb { padding:6px 12px; border-radius:20px; border:1.5px solid var(--div); background:#fff; font-size:11px; font-family:'Noto Sans KR',sans-serif; color:var(--sub); cursor:pointer; transition:all .18s; }
+.bb.on { background:var(--noon-soft); border-color:var(--noon); color:var(--noon); font-weight:700; }
+
+/* 화살표 */
+.arrow-dn { text-align:center; font-size:14px; color:var(--div); padding:1px 0; line-height:1; }
+
+/* 패턴 요약 */
+.pat-sum { background:var(--ink); border-radius:14px; padding:16px; margin:10px 0; display:none; }
+.ps-label { font-size:10px; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:10px; }
+.ps-item { display:flex; gap:8px; align-items:flex-start; margin-bottom:3px; }
+.ps-ico { font-size:12px; flex-shrink:0; margin-top:2px; }
+.ps-txt { font-size:12px; color:#bbb; line-height:1.6; }
+.ps-arr { font-size:10px; color:#333; padding-left:5px; margin-bottom:3px; }
+
+/* 저장 버튼 */
+.save-btn { width:100%; padding:13px; border:none; border-radius:12px; font-size:14px; font-weight:700; font-family:'Noto Sans KR',sans-serif; cursor:pointer; transition:all .2s; margin-top:6px; }
+.save-btn:hover { opacity:.88; }
+.save-btn.saved { background:var(--evening)!important; color:#fff; }
+.m-btn { background:var(--morning); color:#fff; }
+.n-btn { background:var(--noon); color:#fff; }
+.e-btn { background:var(--evening); color:#fff; }
+.ni-btn { background:var(--night); color:#fff; }
+
+/* 아침 선언 */
+.declare-box { border-radius:12px; padding:14px 16px; margin-top:8px; display:none; }
+.declare-box.show { display:block; }
+.db-label { font-size:10px; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; opacity:.8; }
+.db-text { font-family:'Noto Serif KR',serif; font-size:14px; line-height:1.9; }
+.m-decl { background:var(--morning); color:#fff; }
+.ni-decl { background:linear-gradient(135deg,rgba(184,151,90,.2),rgba(45,53,97,.4)); border:1px solid rgba(184,151,90,.3); }
+.ni-decl .db-label { color:var(--gold); }
+.ni-decl .db-text { color:#fff; }
+
+/* 저녁 — 패턴 불러오기 */
+.ev-pat { background:#f8fdf9; border:1px solid var(--evening); border-radius:12px; padding:13px 14px; margin-bottom:10px; }
+.ev-pat-label { font-size:10px; letter-spacing:2px; color:var(--evening); text-transform:uppercase; margin-bottom:8px; }
+.ev-pat-empty { font-size:12px; color:var(--muted); text-align:center; padding:4px 0; }
+.ev-pat-flow { display:flex; flex-direction:column; gap:2px; }
+.epf-item { display:flex; gap:7px; align-items:flex-start; }
+.epf-ico { font-size:11px; flex-shrink:0; margin-top:2px; }
+.epf-txt { font-size:11px; color:var(--ink); line-height:1.5; }
+.epf-arr { font-size:9px; color:var(--div); padding-left:5px; }
+
+/* 명상 */
+.med-tabs { display:flex; gap:6px; margin-bottom:10px; }
+.med-tab { flex:1; padding:8px; border-radius:10px; border:1.5px solid var(--div); background:transparent; font-size:12px; font-family:'Noto Sans KR',sans-serif; color:var(--muted); cursor:pointer; transition:all .2s; }
+
+/* 호흡 */
+.breath-wrap { display:flex; flex-direction:column; align-items:center; gap:12px; padding:4px 0; }
+.breath-ring { width:100px; height:100px; border-radius:50%; background:var(--evening-soft); border:3px solid var(--evening); display:flex; flex-direction:column; align-items:center; justify-content:center; transition:all 4s ease-in-out; }
+.breath-ring.inhale { transform:scale(1.2); background:rgba(74,155,127,.2); border-color:var(--evening); }
+.breath-ring.hold { transform:scale(1.2); background:rgba(184,151,90,.2); border-color:var(--gold); }
+.breath-ring.exhale { transform:scale(.85); background:rgba(124,111,205,.15); border-color:var(--noon); }
+.breath-text { font-size:13px; font-weight:700; color:var(--ink); }
+.breath-sub { font-size:10px; color:var(--muted); margin-top:2px; }
+.breath-info { display:flex; flex-direction:column; align-items:center; gap:8px; }
+.breath-count { font-size:12px; color:var(--evening); font-weight:700; min-height:18px; text-align:center; }
+.breath-btns { display:flex; gap:6px; justify-content:center; }
+.breath-btn { padding:8px 20px; border-radius:20px; border:none; font-size:12px; font-weight:700; font-family:'Noto Sans KR',sans-serif; cursor:pointer; transition:opacity .2s; }
+.breath-btn.start { background:var(--evening); color:#fff; }
+.breath-btn.stop { background:var(--morning); color:#fff; }
+.breath-btn:hover { opacity:.85; }
+.med-tab.active { background:var(--evening); border-color:var(--evening); color:#fff; font-weight:700; }
+.med-panel { display:none; }
+.med-panel.visible { display:block; }
+
+.guide-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.guide-wk { font-size:11px; font-weight:700; color:var(--evening); }
+.tts-wrap { display:flex; gap:5px; }
+.tts-btn { padding:5px 11px; border-radius:16px; border:none; font-size:11px; font-weight:700; font-family:'Noto Sans KR',sans-serif; cursor:pointer; }
+.tts-play-btn { background:var(--evening); color:#fff; }
+.tts-stop-btn { background:var(--morning); color:#fff; display:none; }
+.tts-stat { font-size:11px; color:var(--evening); min-height:14px; margin-bottom:6px; text-align:center; }
+.tts-notice { font-size:11px; color:var(--gold); background:var(--gd-soft,#faf5ec); border-radius:8px; padding:9px 11px; margin-bottom:8px; line-height:1.7; }
+
+/* 사용법 안내 */
+.how-to-use { font-size:11px; color:var(--muted); line-height:1.8; padding:10px 16px; background:#fff; border-bottom:1px solid var(--div); text-align:center; }
+.how-to-use strong { color:var(--sub); }
+
+/* 창조 감정 구분선 */
+.em-divider { font-size:10px; font-weight:700; color:var(--evening); letter-spacing:1px; text-transform:uppercase; margin:10px 0 6px; padding-top:10px; border-top:1px dashed var(--div); }
+.em-creative { width:100%; }
+/* 감정 섹션 레이블 */
+.em-section-label { font-size:10px; font-weight:700; letter-spacing:1px; margin-bottom:6px; }
+.sv-label { color:var(--morning); }
+.cr-label { color:var(--evening); }
+.guide-scroll { background:var(--bg); border-radius:10px; padding:12px 14px; max-height:280px; overflow-y:auto; border:1px solid var(--div); margin-bottom:8px; }
+.gs-step { margin-bottom:12px; }
+.gs-step:last-child { margin-bottom:0; }
+.gs-title { font-size:10px; font-weight:700; color:var(--evening); letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; }
+.gs-text { font-size:13px; line-height:1.85; color:var(--ink); font-family:'Noto Serif KR',serif; }
+.gs-hint { font-size:11px; color:var(--muted); margin-top:4px; font-style:italic; }
+.gs-step.tts-on { background:var(--evening-soft); border-radius:8px; padding:7px; margin:-3px; }
+.guide-nav { display:flex; align-items:center; justify-content:space-between; }
+.gn-btn { padding:5px 12px; border-radius:16px; border:1px solid var(--div); background:transparent; font-size:11px; font-family:'Noto Sans KR',sans-serif; color:var(--sub); cursor:pointer; }
+.gn-btn:disabled { opacity:.3; cursor:default; }
+.gn-cur { font-size:12px; font-weight:700; color:var(--evening); }
+
+.vw-tabs { display:flex; gap:5px; margin-bottom:8px; }
+.vw-tab { flex:1; padding:6px; border-radius:9px; border:1.5px solid var(--div); background:transparent; font-size:11px; font-family:'Noto Sans KR',sans-serif; color:var(--muted); cursor:pointer; transition:all .2s; }
+.vw-tab.active { background:var(--evening); border-color:var(--evening); color:#fff; font-weight:700; }
+.video-card { background:var(--ink); border-radius:12px; padding:18px; text-align:center; }
+.vc-title { font-size:13px; font-weight:700; color:#fff; line-height:1.5; margin-bottom:5px; }
+.vc-desc { font-size:11px; color:#888; line-height:1.6; margin-bottom:14px; }
+.vc-btn { display:inline-block; padding:11px 24px; background:var(--morning); color:#fff; border-radius:10px; font-size:13px; font-weight:700; text-decoration:none; font-family:'Noto Sans KR',sans-serif; }
+.vc-hint { font-size:11px; color:#666; margin-top:10px; line-height:1.6; }
+
+/* 생각 전환 */
+.rf-block { display:flex; flex-direction:column; gap:7px; }
+.rf-row { border-radius:10px; padding:10px 12px; }
+.rf-row.old { background:var(--morning-soft); border:1px solid var(--morning); }
+.rf-row.mid { background:#faf5ec; border:1px solid var(--gold); }
+.rf-row.new { background:var(--evening-soft); border:1px solid var(--evening); }
+.rf-lbl { font-size:10px; font-weight:700; margin-bottom:6px; }
+.rf-row.old .rf-lbl { color:var(--morning); }
+.rf-row.mid .rf-lbl { color:var(--gold); }
+.rf-row.new .rf-lbl { color:var(--evening); }
+.rf-f { background:rgba(255,255,255,.7)!important; border-color:transparent!important; }
+.rf-arr { text-align:center; font-size:11px; color:var(--muted); }
+
+/* 감정 전환 */
+.et-lbl { font-size:11px; font-weight:700; color:var(--sub); margin-bottom:5px; }
+.et-chips { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:6px; }
+.et { padding:5px 10px; border-radius:20px; border:1.5px solid var(--div); background:transparent; font-size:11px; font-family:'Noto Sans KR',sans-serif; color:var(--sub); cursor:pointer; transition:all .18s; }
+.et.from.on { background:var(--morning-soft); border-color:var(--morning); color:var(--morning); font-weight:700; }
+.et.to.on { background:var(--evening-soft); border-color:var(--evening); color:var(--evening); font-weight:700; }
+.et-arr { text-align:center; font-size:11px; color:var(--muted); margin:3px 0; }
+.fc-chips { display:flex; flex-wrap:wrap; gap:5px; margin-top:7px; }
+.fc { padding:5px 10px; border-radius:20px; border:1.5px solid var(--div); background:transparent; font-size:11px; font-family:'Noto Sans KR',sans-serif; color:var(--sub); cursor:pointer; transition:all .18s; }
+.fc.on { background:var(--noon-soft); border-color:var(--noon); color:var(--noon); font-weight:700; }
+.fc-hint { font-size:11px; color:var(--muted); margin-top:6px; line-height:1.5; }
+.feel-guide-box { font-size:12px; color:var(--ink); line-height:1.7; background:#f0f7f4; border-radius:10px; padding:11px 13px; margin:10px 0 8px; border-left:3px solid var(--evening); }
+
+/* 새로운 증거 */
+.ev-card { background:linear-gradient(135deg,var(--evening-soft),#f0ede8); border-radius:14px; padding:14px; border:1.5px solid var(--evening); margin-bottom:8px; }
+.ev-lbl { font-size:10px; font-weight:700; color:var(--evening); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:8px; }
+.ev-ex { font-size:11px; color:var(--muted); line-height:1.7; background:rgba(255,255,255,.6); border-radius:8px; padding:8px 10px; margin-bottom:8px; }
+.new-ev { background:var(--evening); color:#fff; border-radius:10px; padding:12px 14px; margin-top:8px; display:none; }
+.new-ev.show { display:block; }
+.nev-lbl { font-size:10px; letter-spacing:2px; color:rgba(255,255,255,.6); text-transform:uppercase; margin-bottom:6px; }
+.nev-txt { font-family:'Noto Serif KR',serif; font-size:13px; line-height:1.8; }
+
+/* 잠들기 전 */
+.night-card { background:linear-gradient(135deg,var(--ink),#2d3561); border-radius:16px; padding:18px; color:#fff; margin-bottom:8px; }
+.nc-title { font-family:'Noto Serif KR',serif; font-size:14px; font-weight:600; line-height:1.6; margin-bottom:3px; }
+.nc-sub { font-size:11px; color:#777; margin-bottom:12px; }
+.night-f { background:rgba(255,255,255,.08)!important; border-color:rgba(255,255,255,.15)!important; color:#fff!important; }
+.night-f::placeholder { color:rgba(255,255,255,.3); }
+.night-f:focus { border-color:rgba(255,255,255,.35)!important; background:rgba(255,255,255,.12)!important; }
+.night-ev-preview { margin-top:10px; }
+.nep-lbl { font-size:10px; color:rgba(255,255,255,.4); margin-bottom:5px; }
+.nep-item { background:rgba(255,255,255,.08); border-radius:8px; padding:9px 11px; font-size:12px; color:#ccc; line-height:1.6; }
+
+/* 탭 서브텍스트 */
+.tt { padding:9px 4px 7px; }
+.tt-main { font-size:11px; font-weight:500; }
+.tt-sub { font-size:9px; color:var(--muted); display:block; margin-top:1px; font-weight:400; }
+.tt.m.active .tt-sub { color:rgba(194,107,107,.8); }
+.tt.n.active .tt-sub { color:rgba(124,111,205,.8); }
+.tt.e.active .tt-sub { color:rgba(74,155,127,.8); }
+.tt.ni.active .tt-sub { color:rgba(45,53,97,.7); }
+
+/* 퀵 문구 칩 */
+.qc-label { font-size:10px; color:var(--muted); margin-bottom:5px; }
+.quick-chips { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px; }
+.qchip { padding:5px 11px; border-radius:20px; border:1.5px solid var(--div); background:var(--bg); font-size:11px; font-family:'Noto Sans KR',sans-serif; color:var(--sub); cursor:pointer; transition:all .18s; text-align:left; }
+.qchip:hover { background:#fff; }
+.qchip.mc:hover { border-color:var(--morning); color:var(--morning); }
+.qchip.nc:hover { border-color:var(--noon); color:var(--noon); }
+.qchip.ec:hover { border-color:var(--evening); color:var(--evening); }
+.qchip.nic:hover { border-color:var(--night); color:var(--night); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="ey">조 디스펜자 · 자기성찰 챌린지</div>
+  <h1>당신이라는 습관을 깨라<br>20일 챌린지</h1>
+  <p>아침 · 낮 · 저녁 · 잠들기 전</p>
+</header>
+
+<div class="prog">
+  <div class="prog-top"><span>나의 진행도</span><span id="prog-text">0 / 20일</span></div>
+  <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+</div>
+<div style="background:#fff;padding:7px 18px;border-bottom:1px solid var(--div);display:flex;align-items:center;gap:6px" id="start-date-ui"></div>
+
+<div class="day-wrap"><div class="day-nav" id="day-nav"></div></div>
+
+<div class="quote-card">
+  <div class="qc-top">
+    <span class="qc-day" id="qc-day">DAY 1</span>
+    <span class="qc-date" id="qc-date"></span>
+  </div>
+  <div class="qc-week" id="qc-week"></div>
+  <div class="qc-sent" id="qc-sent"></div>
+</div>
+
+<div class="ttabs">
+  <button class="tt m active" onclick="showTab('morning',this)">🌅<br><span class="tt-main">아침</span><br><span class="tt-sub">오늘의 의도</span></button>
+  <button class="tt n" onclick="showTab('noon',this)">☀️<br><span class="tt-main">낮</span><br><span class="tt-sub">패턴 관찰</span></button>
+  <button class="tt e" onclick="showTab('evening',this)">🌙<br><span class="tt-main">저녁</span><br><span class="tt-sub">전환 연습</span></button>
+  <button class="tt ni" onclick="showTab('night',this)">✨<br><span class="tt-main">잠들기 전</span><br><span class="tt-sub">오늘의 선언</span></button>
+</div>
+
+<div class="main">
+
+<!-- ══ 아침 ══ -->
+<div class="tab-panel visible" id="tab-morning">
+  <div class="sec-hd">
+    <div class="sec-dot" style="background:var(--morning)"></div>
+    <div><div class="sec-title">오늘의 의도</div><div class="sec-sub">하루를 시작하기 전, 오늘의 나를 선택해요</div></div>
+  </div>
+
+  <div class="q-block">
+    <div class="q-hd" style="background:var(--morning-soft)">
+      <span class="q-ico">🌟</span>
+      <div>
+        <div class="q-title">오늘 나는 어떤 사람인가?</div>
+        <div class="q-hint">오늘 내가 선택할 나의 모습을 한 문장으로 써보세요</div>
+      </div>
+    </div>
+    <div class="q-body">
+      <div class="q-example">예) "감정에 휘둘리지 않는 사람" / "실수해도 다시 일어서는 사람"</div>
+      <textarea class="f" id="m-who" rows="2" placeholder="오늘 나는 ___ 한 사람이다" oninput="cc('m-who','m-who-c')"></textarea>
+      <div class="char-cnt" id="m-who-c">0자</div>
+    </div>
+  </div>
+
+  <div class="q-block" style="margin-bottom:12px">
+    <div class="q-hd" style="background:var(--morning-soft)">
+      <span class="q-ico">🎯</span>
+      <div>
+        <div class="q-title">오늘의 의도</div>
+        <div class="q-hint">오늘 그 사람으로 살기 위해 선택할 행동을 구체적으로 써보세요</div>
+      </div>
+    </div>
+    <div class="q-body">
+      <div class="q-example">예) "화가 나도 바로 반응하지 않기" / "오늘 내 패턴을 한 번이라도 알아채기"</div>
+      <textarea class="f" id="m-intent" rows="2" placeholder="오늘 나는 ___ 을 선택한다" oninput="cc('m-intent','m-intent-c')"></textarea>
+      <div class="char-cnt" id="m-intent-c">0자</div>
+    </div>
+  </div>
+
+  <div class="declare-box m-decl" id="m-decl">
+    <div class="db-label">오늘의 선언</div>
+    <div class="db-text" id="m-decl-text"></div>
+  </div>
+
+  <button class="save-btn m-btn" id="save-morning" onclick="saveMorning()">오늘의 의도 저장</button>
+</div>
+
+<!-- ══ 낮 ══ -->
+<div class="tab-panel" id="tab-noon">
+  <div class="sec-hd">
+    <div class="sec-dot" style="background:var(--noon)"></div>
+    <div><div class="sec-title">패턴 관찰</div><div class="sec-sub">오늘 나의 생각 → 감정 → 행동 → 결과 → 증거 패턴을 관찰해요</div></div>
+  </div>
+
+  <!-- 생각 -->
+  <div class="q-block">
+    <div class="q-hd thought-h" style="border-left:4px solid var(--noon);background:var(--noon-soft)">
+      <span class="q-ico">🧠</span>
+      <div><div class="q-title">생각</div><div class="q-hint">오늘 머릿속을 가장 많이 차지한 생각은?</div></div>
+    </div>
+    <div class="q-body">
+      <div class="q-example">예) "잘 되지 않으면 어떡하지" / "나는 왜 이럴까" / "나는 변화하고 있다"</div>
+      <textarea class="f" id="ans-t" rows="2" placeholder="오늘 가장 자주 한 생각은..." oninput="cc('ans-t','c-t')"></textarea>
+      <div class="char-cnt" id="c-t">0자</div>
+    </div>
+  </div>
+  <div class="arrow-dn">↓</div>
+
+  <!-- 감정 -->
+  <div class="q-block">
+    <div class="q-hd" style="border-left:4px solid var(--morning);background:var(--morning-soft)">
+      <span class="q-ico">💗</span>
+      <div><div class="q-title">감정</div><div class="q-hint">그 생각에서 어떤 감정이 따라왔나요?</div></div>
+    </div>
+    <div class="q-body">
+      <div class="em-section-label sv-label" style="margin-bottom:6px;color:var(--ink);font-weight:400">오늘 가장 강했던 감정은?</div>
+      <div class="em-chips">
+        <button class="emc sv" onclick="pickEmc(this)">😟 불안감</button>
+        <button class="emc sv" onclick="pickEmc(this)">😔 수치심</button>
+        <button class="emc sv" onclick="pickEmc(this)">😢 슬픔</button>
+        <button class="emc sv" onclick="pickEmc(this)">😤 증오</button>
+        <button class="emc sv" onclick="pickEmc(this)">😰 걱정</button>
+        <button class="emc sv" onclick="pickEmc(this)">🤢 혐오</button>
+        <button class="emc sv" onclick="pickEmc(this)">🧐 판단</button>
+        <button class="emc sv" onclick="pickEmc(this)">😞 후회</button>
+        <button class="emc sv" onclick="pickEmc(this)">😒 질투</button>
+        <button class="emc sv" onclick="pickEmc(this)">😣 피해의식</button>
+        <button class="emc sv" onclick="pickEmc(this)">😖 고통</button>
+        <button class="emc sv" onclick="pickEmc(this)">😠 화</button>
+        <button class="emc sv" onclick="pickEmc(this)">😰 걱정</button>
+        <button class="emc sv" onclick="pickEmc(this)">😤 좌절감</button>
+        <button class="emc sv" onclick="pickEmc(this)">😒 원망</button>
+        <button class="emc sv" onclick="pickEmc(this)">😓 죄책감</button>
+        <button class="emc sv" onclick="pickEmc(this)">😨 두려움</button>
+        <button class="emc sv" onclick="pickEmc(this)">🫥 무가치함</button>
+        <button class="emc sv" onclick="pickEmc(this)">😶 우울</button>
+        <button class="emc sv" onclick="pickEmc(this)">🤑 욕심</button>
+        <button class="emc sv" onclick="pickEmc(this)">🫙 결핍감</button>
+      </div>
+      <div class="em-divider"></div>
+      <div class="em-chips em-creative">
+        <button class="emc cr" onclick="pickEmc(this)">😊 감사</button>
+        <button class="emc cr" onclick="pickEmc(this)">🌟 설렘</button>
+        <button class="emc cr" onclick="pickEmc(this)">💪 자신감</button>
+        <button class="emc cr" onclick="pickEmc(this)">🕊️ 평온</button>
+        <button class="emc cr" onclick="pickEmc(this)">💙 사랑</button>
+        <button class="emc cr" onclick="pickEmc(this)">🌸 따뜻함</button>
+        <button class="emc cr" onclick="pickEmc(this)">✨ 기쁨</button>
+        <button class="emc cr" onclick="pickEmc(this)">🌊 여유</button>
+        <button class="emc cr" onclick="pickEmc(this)">🔥 열정</button>
+        <button class="emc cr" onclick="pickEmc(this)">🌱 희망</button>
+      </div>
+      <textarea class="f" id="ans-e" rows="2" placeholder="이 감정은 어디서 왔을까요? (선택)" oninput="cc('ans-e','c-e')"></textarea>
+      <div class="char-cnt" id="c-e">0자</div>
+    </div>
+  </div>
+  <div class="arrow-dn">↓</div>
+
+  <!-- 행동 -->
+  <div class="q-block">
+    <div class="q-hd" style="border-left:4px solid var(--evening);background:var(--evening-soft)">
+      <span class="q-ico">🚶</span>
+      <div><div class="q-title">행동</div><div class="q-hint">그 감정이 나를 어떻게 움직이게 했나요?</div></div>
+    </div>
+    <div class="q-body">
+      <div class="q-example">예) "습관적으로 반응했다" / "감정을 억누르고 참았다" / "평소와 다른 선택을 했다"</div>
+      <textarea class="f" id="ans-a" rows="2" placeholder="나는 ___ 했다 / 하지 않았다" oninput="cc('ans-a','c-a')"></textarea>
+      <div class="char-cnt" id="c-a">0자</div>
+    </div>
+  </div>
+  <div class="arrow-dn">↓</div>
+
+  <!-- 현실 -->
+  <div class="q-block">
+    <div class="q-hd" style="border-left:4px solid var(--gold);background:#faf5ec">
+      <span class="q-ico">🌱</span>
+      <div><div class="q-title">현실</div><div class="q-hint">그 행동이 어떤 현실을 만들었나요?</div></div>
+    </div>
+    <div class="q-body">
+      <div class="q-example">예) "관계가 점점 어색해졌다" / "또 기회를 놓쳤다" / "조금 달라진 것 같다"</div>
+      <textarea class="f" id="ans-r" rows="2" placeholder="그래서 ___ 이 됐다 / ___ 한 상황이 만들어졌다" oninput="cc('ans-r','c-r')"></textarea>
+      <div class="char-cnt" id="c-r">0자</div>
+    </div>
+  </div>
+  <div class="arrow-dn">↓</div>
+
+  <!-- 증거 -->
+  <div class="q-block" style="margin-bottom:12px">
+    <div class="q-hd" style="border-left:4px solid var(--ink);background:#f0ede8">
+      <span class="q-ico">🔍</span>
+      <div><div class="q-title">증거</div><div class="q-hint">이 결과가 어떤 믿음을 강화하고 있나요?</div></div>
+    </div>
+    <div class="q-body">
+      <div class="q-example" style="margin-bottom:8px">예) "역시 나는 안 된다" / "나는 사람들에게 맞춰야 한다" / "나는 할 수 있다"</div>
+      <textarea class="f" id="ans-ev" rows="2" placeholder="이게 '___ ' 라는 믿음을 강화한다" oninput="cc('ans-ev','c-ev')"></textarea>
+      <div class="char-cnt" id="c-ev">0자</div>
+      <div style="margin-top:12px">
+        <div style="font-size:11px;font-weight:700;color:var(--gold);margin-bottom:8px">💡 그 믿음, 지금도 사실인가요?</div>
+        <div class="belief-row">
+          <button class="bb" onclick="pickBb(this)">아직 그런 것 같다</button>
+          <button class="bb" onclick="pickBb(this)">아니, 사실이 아니다</button>
+          <button class="bb" onclick="pickBb(this)">잘 모르겠다</button>
+        </div>
+        <textarea class="f" id="ans-bb" rows="2" placeholder="왜 그렇게 생각하나요? 새로운 증거가 있다면..." oninput="cc('ans-bb','c-bb')" style="margin-top:8px"></textarea>
+        <div class="char-cnt" id="c-bb">0자</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 패턴 요약 -->
+  <div class="pat-sum" id="pat-sum">
+    <div class="ps-label">오늘의 패턴 요약</div>
+    <div class="ps-item"><span class="ps-ico">🧠</span><span class="ps-txt" id="ps-t"></span></div>
+    <div class="ps-arr">↓</div>
+    <div class="ps-item"><span class="ps-ico">💗</span><span class="ps-txt" id="ps-e"></span></div>
+    <div class="ps-arr">↓</div>
+    <div class="ps-item"><span class="ps-ico">🚶</span><span class="ps-txt" id="ps-a"></span></div>
+    <div class="ps-arr">↓</div>
+    <div class="ps-item"><span class="ps-ico">🌱</span><span class="ps-txt" id="ps-r"></span></div>
+    <div class="ps-item"><span class="ps-ico">🔍</span><span class="ps-txt" id="ps-ev"></span></div>
+  </div>
+
+  <button class="save-btn n-btn" id="save-noon" onclick="saveNoon()">오늘 패턴 저장</button>
+</div>
+
+<!-- ══ 저녁 ══ -->
+<div class="tab-panel" id="tab-evening">
+  <div class="sec-hd">
+    <div class="sec-dot" style="background:var(--evening)"></div>
+    <div><div class="sec-title">전환 연습</div><div class="sec-sub">생각만 바꿔서는 부족해요. 알파 상태에서 생각·감정·행동을 함께 바꿀 때 잠재의식이 새로운 회로를 만들어요.</div></div>
+  </div>
+
+  <!-- 낮 패턴 -->
+  <div class="ev-pat" id="ev-pat">
+    <div class="ev-pat-label">오늘 알아챈 나의 패턴</div>
+    <div class="ev-pat-empty" id="ev-empty">☀️ 낮 탭에서 패턴을 먼저 기록해보세요</div>
+    <div class="ev-pat-flow" id="ev-flow" style="display:none">
+      <div class="epf-item"><span class="epf-ico">🧠</span><span class="epf-txt" id="ef-t"></span></div>
+      <div class="epf-arr">↓</div>
+      <div class="epf-item"><span class="epf-ico">💗</span><span class="epf-txt" id="ef-e"></span></div>
+      <div class="epf-arr">↓</div>
+      <div class="epf-item"><span class="epf-ico">🚶</span><span class="epf-txt" id="ef-a"></span></div>
+      <div class="epf-arr">↓</div>
+      <div class="epf-item"><span class="epf-ico">🌱</span><span class="epf-txt" id="ef-r"></span></div>
+      <div class="epf-arr">↓</div>
+      <div class="epf-item"><span class="epf-ico">🔍</span><span class="epf-txt" id="ef-ev"></span></div>
+    </div>
+  </div>
+
+  <!-- 호흡 -->
+  <div class="q-block" style="margin-bottom:8px">
+    <div class="q-hd" style="background:var(--evening-soft)">
+      <span class="q-ico">🫁</span>
+      <div><div class="q-title">① 호흡</div><div class="q-hint">호흡으로 몸의 긴장을 풀면 명상이 훨씬 깊어져요</div></div>
+    </div>
+    <div class="q-body">
+      <div class="q-example" style="margin-bottom:10px">4초 들이쉬기 → 4초 멈추기 → 8초 내쉬기 → 3회 반복</div>
+      <div class="breath-wrap">
+        <div class="breath-ring" id="breath-ring">
+          <div class="breath-text" id="breath-text">시작</div>
+          <div class="breath-sub" id="breath-sub">버튼을 눌러요</div>
+        </div>
+        <div class="breath-info">
+          <div class="breath-count" id="breath-count"></div>
+          <div class="breath-btns">
+            <button class="breath-btn start" id="breath-start-btn" onclick="breathStart()">▶ 호흡 시작</button>
+            <button class="breath-btn stop" id="breath-stop-btn" onclick="breathStop()" style="display:none">⏹ 멈추기</button>
+          </div>
+        </div>
+      </div>
+      <div class="q-example" style="margin-top:10px">💡 코로 들이쉬고, 입으로 천천히 내쉬어요. 내쉴 때 몸의 긴장이 함께 빠져나간다고 상상해요.</div>
+    </div>
+  </div>
+
+  <!-- 명상 -->
+  <div class="q-block" style="margin-bottom:8px">
+    <div class="q-hd" style="background:var(--evening-soft)">
+      <span class="q-ico">🧘</span>
+      <div><div class="q-title">② 뇌파 전환</div><div class="q-hint">뇌파를 베타→알파→세타로 낮춰 잠재의식의 문을 열어요. 눈을 감고 유도문을 따라가거나 영상을 틀어두세요.</div></div>
+    </div>
+    <div class="q-body">
+      <div class="med-tabs">
+        <button class="med-tab active" onclick="showMedTab('guide',this)">📖 명상 유도문</button>
+        <button class="med-tab" onclick="showMedTab('video',this)">🎬 명상 영상</button>
+      </div>
+      <div class="med-panel visible" id="med-guide">
+        <div class="guide-top">
+          <span class="guide-wk" id="guide-wk">1주차 명상</span>
+          <div class="tts-wrap">
+            <button class="tts-btn tts-play-btn" id="tts-play" onclick="ttsToggle()">🔊 음성 듣기</button>
+            <button class="tts-btn tts-stop-btn" id="tts-stop" onclick="ttsStop()">⏹ 정지</button>
+          </div>
+        </div>
+        <div class="tts-stat" id="tts-stat"></div>
+        <div class="tts-notice" id="tts-notice" style="display:none">
+          💡 음성은 <strong>Chrome 브라우저</strong>에서 파일을 열면 사용할 수 있어요.<br>
+          Claude 앱 내에서는 지원되지 않아요.
+        </div>
+        <div class="guide-scroll" id="guide-text"></div>
+        <div class="guide-nav">
+          <button class="gn-btn" id="gn-prev" onclick="changeGuide(-1)">← 이전</button>
+          <span class="gn-cur" id="gn-cur">1주차</span>
+          <button class="gn-btn" id="gn-next" onclick="changeGuide(1)">다음 →</button>
+        </div>
+      </div>
+      <div class="med-panel" id="med-video">
+        <div class="vw-tabs" style="flex-wrap:wrap;gap:4px">
+          <button class="vw-tab active" onclick="showVideo(0,this)">신체 유도</button>
+          <button class="vw-tab" onclick="showVideo(1,this)">수면 유도</button>
+          <button class="vw-tab" onclick="showVideo(2,this)">2주차</button>
+          <button class="vw-tab" onclick="showVideo(3,this)">3주차</button>
+          <button class="vw-tab" onclick="showVideo(4,this)">4주차</button>
+        </div>
+        <div class="video-card">
+          <div class="vc-title" id="vc-title"></div>
+          <div class="vc-desc" id="vc-desc"></div>
+          <a class="vc-btn" id="vc-btn" href="" target="_blank">▶ 유튜브에서 보기</a>
+          <div class="vc-hint">💡 새 창에서 열려요.<br>소리 켜고 편안하게 눈 감고 따라가세요.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 생각 전환 -->
+  <div class="q-block" style="margin-bottom:8px">
+    <div class="q-hd" style="background:var(--evening-soft)">
+      <span class="q-ico">🧠</span>
+      <div><div class="q-title">③ 생각 전환</div><div class="q-hint">알파 상태에서 바꾼 생각이 더 깊이 새겨져요</div></div>
+    </div>
+    <div class="q-body">
+      <div class="rf-block">
+        <div class="rf-row old"><div class="rf-lbl">❌ 오래된 생각 <span style="font-weight:400;color:var(--muted)">(패턴에서 가져와요)</span></div><textarea class="f rf-f" id="rf-old" rows="2" placeholder="나는 ___ 라고 생각했다"></textarea></div>
+        <div class="rf-arr">↓ 하지만 이건 과거의 믿음이에요</div>
+        <div class="rf-row mid">
+          <div class="rf-lbl">🔍 사실 확인 <span style="font-weight:400;color:var(--muted)">— 지금도 사실인가요?</span></div>
+          <textarea class="f rf-f" id="rf-mid" rows="2" placeholder="이 생각이 항상 사실은 아니다. 왜냐하면..."></textarea>
+        </div>
+        <div class="rf-arr">↓ 그렇다면 새롭게 선택할 수 있어요</div>
+        <div class="rf-row new"><div class="rf-lbl">✨ 새로운 생각 (현재형으로)</div><textarea class="f rf-f" id="rf-new" rows="2" placeholder="나는 ___ 라고 생각한다"></textarea></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 감정 전환 -->
+  <div class="q-block" style="margin-bottom:8px">
+    <div class="q-hd" style="background:var(--evening-soft)">
+      <span class="q-ico">💗</span>
+      <div><div class="q-title">④ 감정 전환</div><div class="q-hint">새 생각을 감정으로 경험해야 뇌가 기억해요</div></div>
+    </div>
+    <div class="q-body">
+      <div class="et-lbl">지금 느끼는 감정 (생존 모드)</div>
+      <div class="et-chips">
+        <button class="et from" onclick="etFrom(this)">😟 불안감</button>
+        <button class="et from" onclick="etFrom(this)">😔 수치심</button>
+        <button class="et from" onclick="etFrom(this)">😢 슬픔</button>
+        <button class="et from" onclick="etFrom(this)">😤 증오</button>
+        <button class="et from" onclick="etFrom(this)">😰 걱정</button>
+        <button class="et from" onclick="etFrom(this)">🧐 판단</button>
+        <button class="et from" onclick="etFrom(this)">😞 후회</button>
+        <button class="et from" onclick="etFrom(this)">😒 질투</button>
+        <button class="et from" onclick="etFrom(this)">😣 피해의식</button>
+        <button class="et from" onclick="etFrom(this)">😖 고통</button>
+        <button class="et from" onclick="etFrom(this)">😠 화</button>
+        <button class="et from" onclick="etFrom(this)">😤 좌절감</button>
+        <button class="et from" onclick="etFrom(this)">😒 원망</button>
+        <button class="et from" onclick="etFrom(this)">😓 죄책감</button>
+        <button class="et from" onclick="etFrom(this)">😨 두려움</button>
+        <button class="et from" onclick="etFrom(this)">🫥 무가치함</button>
+        <button class="et from" onclick="etFrom(this)">😶 우울</button>
+        <button class="et from" onclick="etFrom(this)">🤑 욕심</button>
+        <button class="et from" onclick="etFrom(this)">🫙 결핍감</button>
+      </div>
+      <div class="et-arr">↓ 알아챈 것만으로 이미 절반은 빠져나왔어요</div>
+      <div class="et-lbl">내가 선택할 감정 (창조 모드)</div>
+      <div class="et-chips">
+        <button class="et to" onclick="etTo(this)">😊 감사</button>
+        <button class="et to" onclick="etTo(this)">🌟 설렘</button>
+        <button class="et to" onclick="etTo(this)">💪 자신감</button>
+        <button class="et to" onclick="etTo(this)">🕊️ 평온</button>
+        <button class="et to" onclick="etTo(this)">💙 사랑</button>
+        <button class="et to" onclick="etTo(this)">🌸 따뜻함</button>
+        <button class="et to" onclick="etTo(this)">✨ 기쁨</button>
+        <button class="et to" onclick="etTo(this)">🌊 여유</button>
+        <button class="et to" onclick="etTo(this)">🔥 열정</button>
+        <button class="et to" onclick="etTo(this)">🌱 희망</button>
+      </div>
+      <div class="q-example" style="margin:10px 0 8px">👇 선택한 감정을 눈 감고 30초간 몸으로 먼저 느껴보세요. 상상이 아니라 실제로 그 감정이 몸에서 느껴지도록 해요. 가슴이 따뜻해지거나 어깨가 펴지는 변화를 알아채보세요.</div>
+      <div class="fc-chips">
+        <button class="fc" onclick="pickFc(this)">✨ 가볍고 자유로운</button>
+        <button class="fc" onclick="pickFc(this)">🌊 차분하고 안정된</button>
+        <button class="fc" onclick="pickFc(this)">🌟 설레고 기대되는</button>
+        <button class="fc" onclick="pickFc(this)">💪 당당하고 믿음직한</button>
+        <button class="fc" onclick="pickFc(this)">🌸 따뜻하고 연결된</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin:8px 0 5px">✏️ 직접 쓰고 싶다면</div>
+      <textarea class="f" id="emotion-custom" rows="2" placeholder="선택하고 싶은 감정을 직접 써보세요..." oninput="cc('emotion-custom','c-emc')" style="margin-bottom:3px"></textarea>
+      <div class="char-cnt" id="c-emc">0자</div>
+    </div>
+  </div>
+
+  <!-- 새로운 행동 선택 -->
+  <div class="q-block" style="margin-bottom:8px">
+    <div class="q-hd" style="background:var(--evening-soft)">
+      <span class="q-ico">🚶</span>
+      <div><div class="q-title">⑤ 새로운 행동 선택</div><div class="q-hint">새로운 나라면 오늘 어떤 행동을 선택할까요?</div></div>
+    </div>
+    <div class="q-body">
+      <div class="qc-label">👇 클릭하면 입력돼요</div>
+      <div class="quick-chips">
+        <button class="qchip ec" onclick="fillText('ev-action',this)">💬 먼저 말을 걸어보기</button>
+        <button class="qchip ec" onclick="fillText('ev-action',this)">✋ 도움이 필요할 때 "도와주세요" 말하기</button>
+        <button class="qchip ec" onclick="fillText('ev-action',this)">🙋 의견이 있을 때 말하기</button>
+        <button class="qchip ec" onclick="fillText('ev-action',this)">🪞 거울 보며 "나는 충분해" 말하기</button>
+        <button class="qchip ec" onclick="fillText('ev-action',this)">📝 미뤄왔던 것 딱 5분만 시작하기</button>
+      </div>
+      <textarea class="f" id="ev-action" rows="2" placeholder="오늘 나는 ___ 을(를) 선택한다" oninput="cc('ev-action','c-ea')"></textarea>
+      <div class="char-cnt" id="c-ea">0자</div>
+    </div>
+  </div>
+
+  <!-- 새로운 나 선언 -->
+  <div class="q-block" style="margin-bottom:12px">
+    <div class="q-hd" style="background:var(--evening-soft)">
+      <span class="q-ico">✨</span>
+      <div><div class="q-title">⑥ 새로운 나 선언</div><div class="q-hint">알파 상태에서 현재형으로 선언하면 잠재의식에 깊이 새겨져요</div></div>
+    </div>
+    <div class="q-body">
+      <div class="q-example" style="margin-bottom:10px">💡 현재형 선언은 뇌에게 "이미 그런 사람이다"라는 신호를 보내요. 뇌는 현실과 상상을 구별하지 못해요.</div>
+      <div class="qc-label">👇 클릭하면 입력돼요</div>
+      <div class="quick-chips">
+        <button class="qchip ec" onclick="fillText('sw-intent',this)">나는 스스로를 믿는다</button>
+        <button class="qchip ec" onclick="fillText('sw-intent',this)">나는 안전하다</button>
+        <button class="qchip ec" onclick="fillText('sw-intent',this)">나는 충분하다</button>
+        <button class="qchip ec" onclick="fillText('sw-intent',this)">나는 변화하고 있다</button>
+        <button class="qchip ec" onclick="fillText('sw-intent',this)">나는 나를 사랑한다</button>
+      </div>
+      <textarea class="f serif" id="sw-intent" rows="3" placeholder="나는 ___ 한 사람이다.&#10;나는 ___ 하다." oninput="cc('sw-intent','c-si')" style="font-size:14px"></textarea>
+      <div class="char-cnt" id="c-si">0자</div>
+    </div>
+  </div>
+
+  <button class="save-btn e-btn" id="save-evening" onclick="saveEvening()">오늘 전환 기록 저장</button>
+</div>
+
+<!-- ══ 잠들기 전 ══ -->
+<div class="tab-panel" id="tab-night">
+  <div class="sec-hd">
+    <div class="sec-dot" style="background:var(--night)"></div>
+    <div><div class="sec-title">오늘의 선언</div><div class="sec-sub">나는 달라지고 있다</div></div>
+  </div>
+
+  <div class="night-card">
+    <div class="nc-title">오늘 하루 돌아보기</div>
+    <div class="nc-sub">한 줄도 좋아요. 솔직하게 써보세요</div>
+    <div class="q-example" style="background:rgba(255,255,255,.08);color:#aaa;margin-bottom:10px">예) "오늘 화가 났지만 바로 반응하지 않았다" / "또 같은 패턴이었다, 그래도 알아챘다"</div>
+    <textarea class="f serif night-f" id="night-review" rows="4" placeholder="오늘 어떤 하루였나요?" oninput="cc('night-review','c-nr')"></textarea>
+    <div class="char-cnt" id="c-nr" style="color:rgba(255,255,255,.3)">0자</div>
+  </div>
+
+  <div class="night-card" style="margin-bottom:10px">
+    <div class="nc-title">오늘의 선언</div>
+    <div class="nc-sub">잠들기 전 이 선언을 마음에 새기세요</div>
+    <div class="q-example" style="background:rgba(255,255,255,.08);color:#aaa;margin-bottom:8px">예) "나는 달라지고 있다" / "오늘 나는 ___ 을 선택했다" / "나는 더 이상 과거의 산물이 아니다"</div>
+    <div class="qc-label" style="color:rgba(255,255,255,.4)">👇 클릭하면 입력돼요</div>
+    <div class="quick-chips" style="margin-bottom:8px">
+      <button class="qchip nic" onclick="fillText('night-declare',this)" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.15);color:#bbb">나는 달라지고 있다</button>
+      <button class="qchip nic" onclick="fillText('night-declare',this)" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.15);color:#bbb">나는 더 이상 과거의 산물이 아니다</button>
+      <button class="qchip nic" onclick="fillText('night-declare',this)" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.15);color:#bbb">나는 스스로를 믿는다</button>
+      <button class="qchip nic" onclick="fillText('night-declare',this)" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.15);color:#bbb">나는 안전하다. 나는 충분하다</button>
+      <button class="qchip nic" onclick="fillText('night-declare',this)" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.15);color:#bbb">나는 미래의 선물이다</button>
+    </div>
+    <textarea class="f serif night-f" id="night-declare" rows="3" placeholder="나는 달라지고 있다..." oninput="cc('night-declare','c-nd')"></textarea>
+    <div class="char-cnt" id="c-nd" style="color:rgba(255,255,255,.3)">0자</div>
+  </div>
+
+  <div class="declare-box ni-decl" id="ni-decl">
+    <div class="db-label">✨ 오늘의 선언</div>
+    <div class="db-text" id="ni-decl-text"></div>
+  </div>
+
+  <button class="save-btn ni-btn" id="save-night" onclick="saveNight()">오늘 마무리 저장</button>
+</div>
+
+</div>
+
+<script>
+const DAYS=[
+  {week:'1주차 — 왜 우리는 변하지 못하는가',sent:'"당신이 깰 수 있는 가장 위대한 습관은 바로 \'당신 자신\'이라는 습관이다."'},
+  {week:'1주차 — 왜 우리는 변하지 못하는가',sent:'"어제와 같은 오늘을 살면서 어떻게 다른 내일을 기대할 수 있겠는가?"'},
+  {week:'1주차 — 왜 우리는 변하지 못하는가',sent:'"생각은 뇌의 언어이고, 느낌은 몸의 언어다. 변화는 이 둘이 하나가 될 때 일어난다."'},
+  {week:'1주차 — 왜 우리는 변하지 못하는가',sent:'"우리는 대개 외부 환경이 내면의 상태를 만든다고 믿는다. 그러나 실제로는 내면의 상태가 외부 환경을 만든다."'},
+  {week:'1주차 — 왜 우리는 변하지 못하는가',sent:'"많은 사람들이 몸이 곧 마음이 되어버린 상태로 살아간다. 몸이 주인이 되어 생각을 지배하는 것이다."'},
+  {week:'2주차 — 습관이 \'나\'가 되는 원리',sent:'"과거의 감정을 계속 재경험하는 한, 몸은 과거 속에 살고 있다."'},
+  {week:'2주차 — 습관이 \'나\'가 되는 원리',sent:'"대부분의 사람들은 과거의 기억과 미래의 걱정 사이에서 \'현재\'를 잃어버린다."'},
+  {week:'2주차 — 습관이 \'나\'가 되는 원리',sent:'"변화란 지금 이 순간, 미래의 자신이 되기로 선택하는 것이다."'},
+  {week:'2주차 — 습관이 \'나\'가 되는 원리',sent:'"두려움, 분노, 수치심은 생존의 감정이다. 이 감정들이 지배할 때, 우리는 창조할 수 없다."'},
+  {week:'2주차 — 습관이 \'나\'가 되는 원리',sent:'"신경 세포는 함께 발화하면 함께 연결된다. 당신이 반복하는 생각이 곧 당신의 뇌 구조가 된다."'},
+  {week:'3주차 — 뇌를 바꾸는 실천의 문',sent:'"생각에서 행동으로, 행동에서 존재로. 이것이 새로운 나를 만드는 세 단계다."'},
+  {week:'3주차 — 뇌를 바꾸는 실천의 문',sent:'"잠깐 멈추는 것, 그 \'틈새\'가 자동적인 반응을 의식적인 선택으로 바꿔준다."'},
+  {week:'3주차 — 뇌를 바꾸는 실천의 문',sent:'"명상이란 생각하는 것을 멈추는 것이 아니라, 생각하는 \'자신\'을 관찰하는 것이다."'},
+  {week:'3주차 — 뇌를 바꾸는 실천의 문',sent:'"창조적인 삶을 산다는 것은 \'아무도 아닌 존재\'로 산다는 뜻이다. 이기적인 에고를 내려놓는 것이다."'},
+  {week:'3주차 — 뇌를 바꾸는 실천의 문',sent:'"변화는 고통스러운 위기가 올 때까지 기다릴 필요가 없다. 기쁨 속에서도 진화는 가능하다."'},
+  {week:'4주차 — 새로운 나를 창조하는 시간',sent:'"먼저 당신이 되고 싶지 않은 사람이 누구인지 인식하라. 인식이 곧 변화의 첫 걸음이다."'},
+  {week:'4주차 — 새로운 나를 창조하는 시간',sent:'"과거의 자신을 솔직히 인정하고 선언할 때, 비로소 그것에서 자유로워진다."'},
+  {week:'4주차 — 새로운 나를 창조하는 시간',sent:'"의식적으로 과거의 자신과 분리될 때, 무의식적인 자동 프로그램의 힘이 약해진다."'},
+  {week:'4주차 — 새로운 나를 창조하는 시간',sent:'"감정이 기억을 강화한다. 고양된 감정과 함께 상상할 때, 그 미래는 더 빠르게 현실이 된다."'},
+  {week:'4주차 — 새로운 나를 창조하는 시간',sent:'"당신이라는 습관을 깨는 순간, 당신은 더 이상 과거의 산물이 아니라 미래의 선물이 된다."'},
+];
+
+const GUIDES=[
+  {wk:'1주차 — 베타→알파→세타',steps:[
+    {title:'🔴 준비',text:'편안한 자세로 앉거나 눕습니다. 눈을 부드럽게 감으세요. 숨을 천천히 들이쉬고 내쉬며 외부의 소리와 생각을 흘려보냅니다.',hint:'2~3분 천천히 호흡하며 시작해요'},
+    {title:'🟡 알파 → 몸 이완',text:'두 발에서 시작해 다리, 골반, 배, 가슴, 어깨, 팔, 목, 얼굴까지 천천히 올라오세요. 각 부위의 긴장을 느끼고 내려놓습니다. 눈꺼풀이 묵직해지면 알파 진입 신호예요.',hint:'몸이 무거워지는 느낌이 정상이에요'},
+    {title:'🟡 알파 → 공간 인식',text:'이제 몸 주변의 공간을 느껴보세요. 뒤쪽, 옆쪽, 위쪽 공간을 차례로 느껴봅니다. 나의 의식이 몸을 넘어 공간으로 확장됩니다.',hint:'공간감이 느껴지면 알파 상태예요'},
+    {title:'🔵 세타 → 더 깊이',text:'이제 더 깊이 내려갑니다. 생각이 완전히 멈추고 시간과 공간의 감각이 흐릿해집니다. 나는 그저 순수한 의식입니다. 몸도, 이름도, 과거도 없습니다. 오직 지금 이 순간의 의식만 있습니다.',hint:'생각이 사라지면 세타 진입이에요'},
+    {title:'🔵 세타 → 잠재의식의 문',text:'이 깊은 고요 속에서 잠재의식의 문이 완전히 열립니다. 이곳에서 오래된 프로그램을 내려놓고 새로운 것을 심을 수 있어요. 그냥 여기 머물러보세요.',hint:'이 상태가 변화가 일어나는 곳이에요'},
+    {title:'✨ 마무리',text:'천천히 호흡을 깊게 들이쉬고 길게 내쉽니다. 손가락 발가락을 조금씩 움직이며 현재로 돌아옵니다. 눈을 천천히 뜨세요.',hint:''},
+  ]},
+  {wk:'2주차 — 관찰자 되기',steps:[
+    {title:'🔴→🔵 빠른 진입',text:'1주차 이완을 바탕으로 빠르게 진입합니다. 눈을 감고 몸 전체를 한 번에 이완하세요. 생각이 느려지고 시간이 사라지기 시작합니다.',hint:'이완이 점점 빨라져요'},
+    {title:'🔵 과거 자신 관찰',text:'이 깊은 고요 속에서, 내가 자주 해온 생각 하나를 멀리서 바라봅니다. 그것은 나의 본질이 아니에요. 수십 년간 반복해온 패턴일 뿐이에요. 판단 없이 그저 바라보세요.',hint:'세타 상태에서 관찰하면 감정이 붙지 않아요'},
+    {title:'🔵 감정과 분리',text:'그 생각과 함께 왔던 감정에게 말해보세요. 나는 너를 알아. 하지만 나는 더 이상 너에게 지배받지 않아. 그 감정이 멀어지는 것을 느껴보세요.',hint:'이 분리가 오래된 회로를 끊는 순간이에요'},
+    {title:'✨ 새로운 자아 심기',text:'이 고요하고 깊은 상태에서 선언합니다. 나는 스스로를 믿는다. 나는 안전하다. 나는 충분하다. 이 말들이 잠재의식 깊은 곳에 새겨집니다.',hint:'세타 상태에서 심는 의도는 훨씬 강력해요'},
+    {title:'✨ 마무리',text:'천천히 현재로 돌아옵니다. 손가락 발가락을 움직이며 몸을 느껴보세요. 눈을 천천히 뜹니다.',hint:''},
+  ]},
+  {wk:'3주차 — 미래 창조',steps:[
+    {title:'🔴→🔵 세타 진입',text:'눈을 감고 깊은 호흡 세 번으로 바로 세타로 진입합니다. 생각이 사라지고 시간과 공간이 흐릿해집니다.',hint:'3주차부터는 진입이 빨라져요'},
+    {title:'🔵 아무도 아닌 존재',text:'이 상태에서 나는 이름도 직업도 과거의 기억도 없습니다. 그저 순수한 에너지이자 의식입니다. 이 자유로운 상태에서 어떤 것이든 새롭게 선택할 수 있어요.',hint:'에고가 사라진 상태가 창조의 출발점이에요'},
+    {title:'🔵 미래의 나 상상',text:'이 깊은 고요 속에서 1년 후의 나를 생생하게 그립니다. 어디에 있나요? 어떤 표정인가요? 뇌는 상상과 현실을 구별하지 못해요. 지금 그것이 이미 현실입니다.',hint:'세타에서 상상하면 뇌에 가장 강하게 각인돼요'},
+    {title:'🔵 감정 먼저 경험',text:'이미 그 미래가 이루어졌다면 지금 어떤 감정일까요? 그 감정을 지금 몸으로 느껴봅니다. 감사함, 기쁨, 자유로움. 가슴이 따뜻해지는 것을 느껴보세요.',hint:'감정이 기억을 만들어요'},
+    {title:'✨ 새로운 나 선언 + 마무리',text:'나는 이미 변화하고 있다. 나는 스스로를 믿는다. 나는 안전하다. 깊은 호흡과 함께 천천히 현재로 돌아옵니다.',hint:''},
+  ]},
+  {wk:'4주차 — 새로운 존재로',steps:[
+    {title:'🔴→🔵 즉각 진입',text:'눈을 감습니다. 한 번의 깊은 호흡으로 세타로 바로 들어갑니다. 4주간의 연습이 지금 빛을 발해요.',hint:'몸이 이미 그 길을 알고 있어요'},
+    {title:'🔵 과거 자아와의 작별',text:'과거의 나를 마지막으로 바라봅니다. 숨고 싶었던 나, 눈치를 봤던 나. 그에게 감사합니다. 너는 나를 지켜줬어. 이제 쉬어도 돼.',hint:'이 작별이 진짜 변화의 시작이에요'},
+    {title:'🔵 새로운 나로 존재',text:'이제 새로운 나로 존재합니다. 당당하고 자유롭고 스스로를 믿는 사람. 그 상태를 지금 몸으로 느껴보세요. 이것이 곧 현실이 됩니다.',hint:'몸이 먼저 그 사람이 되는 게 핵심이에요'},
+    {title:'✨ 최종 선언 + 마무리',text:'나는 더 이상 과거의 산물이 아니다. 나는 미래의 선물이다. 나는 오늘 새로운 나로 산다. 깊은 호흡과 함께 눈을 뜹니다.',hint:'20일의 여정이 여기서 완성돼요'},
+  ]},
+];
+
+const VIDEOS=[
+  {title:'1주차 — 신체 집중 유도문 🇰🇷',desc:'몸의 각 부위에 의식을 두어 베타→알파→세타로 이동해요. 모든 명상의 기초예요.',id:'wbFekHtbH3s'},
+  {title:'1주차 — 수면 상승 유도문 🇰🇷',desc:'잠들기 전에 사용하는 유도문이에요. ✨ 잠들기 전 탭과 함께 활용해보세요.',id:'sqbhr9WcWm8'},
+  {title:'2주차 — 습관 가지치기 🇰🇷',desc:'오래된 자아의 습관 패턴을 관찰하고 분리하는 명상이에요. 신체 집중 유도문 후 이어서 해요.',id:'tgxkphrWEvQ'},
+  {title:'3주차 — 오래된 나를 기억에서 지우기 🇰🇷',desc:'잠재의식에서 과거의 나를 해체하고 새로운 미래를 심는 명상이에요.',id:'5HcobOARf8g'},
+  {title:'4주차 — 새로운 미래를 위한 새로운 나 🇰🇷',desc:'새로운 나로 살아가는 완성 명상이에요. 1~3주차 후 이어서 해요.',id:'rC6tUX_5NCI'},
+];
+
+let cur=0, recs={}, curGuide=0, ttsOn=false, ttsSteps=[], ttsIdx=0;
+try{const s=localStorage.getItem('dz_blank');if(s)recs=JSON.parse(s);}catch(e){}
+
+// ── 평일 기준 날짜 계산 ──
+function getStartDate(){
+  const saved=localStorage.getItem('dz_start');
+  if(saved) return new Date(saved);
+  return null;
+}
+
+function setStartDate(dateStr){
+  localStorage.setItem('dz_start', dateStr);
+}
+
+// idx번째 평일 날짜 계산 (0=시작일, 토/일 건너뜀)
+function getWeekdayDate(startDate, idx){
+  const d=new Date(startDate);
+  let count=0;
+  while(count<idx){
+    d.setDate(d.getDate()+1);
+    const dow=d.getDay();
+    if(dow!==0&&dow!==6) count++;
+  }
+  return d;
+}
+
+function formatDate(d){
+  const days=['일','월','화','수','목','금','토'];
+  return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+days[d.getDay()]+')';
+}
+
+function today(){const d=new Date();return formatDate(d);}
+
+function getDayDate(idx){
+  const start=getStartDate();
+  if(!start) return today();
+  return formatDate(getWeekdayDate(start, idx));
+}
+
+function init(){
+  // 시작일 없으면 오늘로 자동 설정
+  if(!getStartDate()){
+    const now=new Date();
+    // 오늘이 주말이면 다음 월요일로
+    let dow=now.getDay();
+    if(dow===0) now.setDate(now.getDate()+1);
+    else if(dow===6) now.setDate(now.getDate()+2);
+    setStartDate(now.toISOString().split('T')[0]);
+  }
+
+  const nav=document.getElementById('day-nav');
+  DAYS.forEach((_,i)=>{
+    const b=document.createElement('button');
+    b.className='db'+(i===0?' active':'');
+    b.textContent=i+1; b.id='db-'+i;
+    b.onclick=()=>loadDay(i);
+    if(recs[i]?.done)b.classList.add('done');
+    nav.appendChild(b);
+  });
+
+  // 시작일 설정 버튼 렌더
+  renderStartDateUI();
+  loadDay(0); updateProg();
+}
+
+function renderStartDateUI(){
+  const start=getStartDate();
+  const el=document.getElementById('start-date-ui');
+  if(!el) return;
+  const startFmt=start?formatDate(start):'미설정';
+  el.innerHTML=`<span style="font-size:11px;color:var(--muted)">챌린지 시작일 </span><span style="font-size:11px;color:var(--noon);font-weight:700">${startFmt}</span> <button onclick="changeStartDate()" style="font-size:10px;color:var(--muted);background:none;border:none;cursor:pointer;text-decoration:underline">변경</button>`;
+}
+
+function changeStartDate(){
+  const start=getStartDate();
+  const cur=start?start.toISOString().split('T')[0]:new Date().toISOString().split('T')[0];
+  const input=prompt('시작일을 입력해주세요 (예: 2025-01-06)', cur);
+  if(!input) return;
+  const d=new Date(input);
+  if(isNaN(d)){alert('날짜 형식이 올바르지 않아요 (예: 2025-01-06)');return;}
+  const dow=d.getDay();
+  if(dow===0||dow===6){alert('시작일은 평일(월~금)로 선택해주세요.');return;}
+  setStartDate(input);
+  renderStartDateUI();
+  loadDay(window.cur||0);
+}
+
+function loadDay(idx){
+  window.cur=idx; cur=idx;
+  const d=DAYS[idx],r=recs[idx]||{};
+  document.getElementById('qc-day').textContent='DAY '+(idx+1);
+  document.getElementById('qc-week').textContent=d.week;
+  document.getElementById('qc-date').textContent=getDayDate(idx);
+  document.getElementById('qc-sent').textContent=d.sent;
+  document.querySelectorAll('.db').forEach((b,i)=>b.classList.toggle('active',i===idx));
+
+  document.querySelectorAll('.emc').forEach(c=>c.classList.toggle('on',c.textContent.trim()===(r.ep||'')));
+  document.querySelectorAll('.bb').forEach(b=>b.classList.toggle('on',b.textContent.trim()===(r.belief||'')));
+  document.querySelectorAll('.et.from').forEach(c=>c.classList.toggle('on',c.textContent.trim()===(r.et_from||'')));
+  document.querySelectorAll('.et.to').forEach(c=>c.classList.toggle('on',c.textContent.trim()===(r.et_to||'')));
+  document.querySelectorAll('.fc').forEach(c=>c.classList.toggle('on',c.textContent.trim()===(r.fc||'')));
+
+  const sv=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v||'';};
+  sv('m-who',r.m_who); sv('m-intent',r.m_intent);
+  sv('ans-t',r.ans_t); sv('ans-e',r.ans_e); sv('ans-a',r.ans_a);
+  sv('ans-r',r.ans_r); sv('ans-ev',r.ans_ev); sv('ans-bb',r.ans_bb);
+  sv('rf-old',r.rf_old||r.ans_t); sv('rf-mid',r.rf_mid); sv('rf-new',r.rf_new);
+  sv('ev-action',r.ev_action); sv('sw-intent',r.sw_intent); sv('ev-feel',r.ev_feel); sv('emotion-custom',r.emotion_custom);
+  sv('night-review',r.night_review); sv('night-declare',r.night_declare);
+
+  [['m-who','m-who-c'],['m-intent','m-intent-c'],['ans-t','c-t'],['ans-e','c-e'],['ans-a','c-a'],['ans-r','c-r'],['ans-ev','c-ev'],['ev-action','c-ea'],['ev-feel','c-ef'],['night-review','c-nr'],['night-declare','c-nd']].forEach(([t,c])=>cc(t,c));
+
+  // 아침 선언
+  if(r.m_intent||r.m_who){
+    const parts=[r.m_who,r.m_intent].filter(Boolean);
+    document.getElementById('m-decl-text').textContent=parts.join('\n');
+    document.getElementById('m-decl').classList.add('show');
+  } else document.getElementById('m-decl').classList.remove('show');
+
+  // 패턴 요약
+  if(r.ans_t)showPatSum(r); else document.getElementById('pat-sum').style.display='none';
+  loadEvPat(r);
+
+  // 저녁 증거
+  if(r.ev_action){
+    const nevTxt=document.getElementById('new-ev-txt');
+    const nev=document.getElementById('new-ev');
+    if(nevTxt) nevTxt.textContent=`오늘 나는 "${r.ev_action}"을(를) 했다.${r.ev_feel?' — '+r.ev_feel:''}`;
+    if(nev) nev.classList.add('show');
+    const ni=document.getElementById('night-ev-item');
+    const ne=document.getElementById('night-ev-empty');
+    if(ni){ni.textContent=r.ev_action; ni.style.display='block';}
+    if(ne) ne.style.display='none';
+  } else {
+    const nev=document.getElementById('new-ev');
+    if(nev) nev.classList.remove('show');
+    const ni=document.getElementById('night-ev-item');
+    const ne=document.getElementById('night-ev-empty');
+    if(ni) ni.style.display='none';
+    if(ne) ne.style.display='block';
+  }
+
+  // 잠들기 전 선언
+  if(r.night_declare){
+    document.getElementById('ni-decl-text').textContent=r.night_declare;
+    document.getElementById('ni-decl').classList.add('show');
+  } else document.getElementById('ni-decl').classList.remove('show');
+
+  // 저장버튼 리셋
+  [{id:'save-morning',txt:'오늘의 의도 저장'},{id:'save-noon',txt:'오늘 패턴 저장'},{id:'save-evening',txt:'오늘 전환 기록 저장'},{id:'save-night',txt:'오늘 마무리 저장'}].forEach(({id,txt})=>{const b=document.getElementById(id);if(b){b.textContent=txt;b.classList.remove('saved');}});
+
+  curGuide=Math.min(3,Math.floor(idx/5));
+  renderGuide(curGuide);
+}
+
+function showPatSum(r){
+  const s=document.getElementById('pat-sum');s.style.display='block';
+  const st=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v||'—';};
+  st('ps-t',r.ans_t); st('ps-e',(r.ep||'')+(r.ans_e?' — '+r.ans_e.slice(0,40):'')); st('ps-a',r.ans_a); st('ps-r',r.ans_r); st('ps-ev',r.ans_ev);
+}
+
+function loadEvPat(r){
+  const em=document.getElementById('ev-empty'),fl=document.getElementById('ev-flow');
+  if(!em||!fl)return;
+  if(r.ans_t||r.ans_a){
+    em.style.display='none'; fl.style.display='flex';
+    const st=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v||'—';};
+    st('ef-t',r.ans_t); st('ef-e',(r.ep||'')+(r.ans_e?' — '+r.ans_e.slice(0,40):'')); st('ef-a',r.ans_a); st('ef-r',r.ans_r); st('ef-ev',r.ans_ev);
+  } else {em.style.display='block';fl.style.display='none';}
+}
+
+function showTab(tab,btn){
+  document.querySelectorAll('.tt').forEach(t=>t.classList.remove('active')); btn.classList.add('active');
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('visible'));
+  document.getElementById('tab-'+tab).classList.add('visible');
+  if(tab==='evening'){loadEvPat(recs[cur]||{}); renderGuide(curGuide);}
+}
+
+function pickEmc(el){document.querySelectorAll('.emc').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
+function pickBb(el){document.querySelectorAll('.bb').forEach(b=>b.classList.remove('on'));el.classList.add('on');}
+function etFrom(el){document.querySelectorAll('.et.from').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
+function etTo(el){document.querySelectorAll('.et.to').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
+function pickFc(el){document.querySelectorAll('.fc').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
+
+function save(){try{localStorage.setItem('dz_blank',JSON.stringify(recs));}catch(e){}}
+function setBtn(id,txt){const b=document.getElementById(id);b.textContent='✓ 저장됐어요!';b.classList.add('saved');setTimeout(()=>{b.textContent=txt;b.classList.remove('saved');},2000);}
+
+function saveMorning(){
+  if(!recs[cur])recs[cur]={};const r=recs[cur];
+  r.m_who=document.getElementById('m-who').value;
+  r.m_intent=document.getElementById('m-intent').value;
+  r.done=true; save();
+  if(r.m_who||r.m_intent){
+    const parts=[r.m_who,r.m_intent].filter(Boolean);
+    document.getElementById('m-decl-text').textContent=parts.join('\n');
+    document.getElementById('m-decl').classList.add('show');
+  }
+  setBtn('save-morning','오늘의 의도 저장');
+  document.getElementById('db-'+cur).classList.add('done'); updateProg();
+}
+
+function saveNoon(){
+  if(!recs[cur])recs[cur]={};const r=recs[cur];
+  const pe=document.querySelector('.emc.on'); r.ep=pe?pe.textContent.trim():'';
+  const pb=document.querySelector('.bb.on'); r.belief=pb?pb.textContent.trim():'';
+  r.ans_t=document.getElementById('ans-t').value;
+  r.ans_e=document.getElementById('ans-e').value;
+  r.ans_a=document.getElementById('ans-a').value;
+  r.ans_r=document.getElementById('ans-r').value;
+  r.ans_ev=document.getElementById('ans-ev').value;
+  r.ans_bb=document.getElementById('ans-bb')?.value||'';
+  r.done=true; save(); showPatSum(r);
+  // 생각 전환 오래된 생각 자동 채우기
+  const rfOld=document.getElementById('rf-old');
+  if(rfOld&&r.ans_t) rfOld.value=r.ans_t;
+  setBtn('save-noon','오늘 패턴 저장');
+  document.getElementById('db-'+cur).classList.add('done'); updateProg();
+}
+
+function saveEvening(){
+  if(!recs[cur])recs[cur]={};const r=recs[cur];
+  r.rf_old=document.getElementById('rf-old').value;
+  r.rf_mid=document.getElementById('rf-mid').value;
+  r.rf_new=document.getElementById('rf-new').value;
+  const ef=document.querySelector('.et.from.on'); r.et_from=ef?ef.textContent.trim():'';
+  const et=document.querySelector('.et.to.on'); r.et_to=et?et.textContent.trim():'';
+  const fc=document.querySelector('.fc.on'); r.fc=fc?fc.textContent.trim():'';
+  r.ev_action=document.getElementById('ev-action')?.value||'';
+  r.sw_intent=document.getElementById('sw-intent')?.value||'';
+  r.ev_feel=document.getElementById('ev-feel')?.value||'';
+  r.emotion_custom=document.getElementById('emotion-custom')?.value||'';
+  r.done=true; save();
+  setBtn('save-evening','오늘 전환 기록 저장');
+  document.getElementById('db-'+cur).classList.add('done'); updateProg();
+}
+
+function saveNight(){
+  if(!recs[cur])recs[cur]={};const r=recs[cur];
+  r.night_review=document.getElementById('night-review').value;
+  r.night_declare=document.getElementById('night-declare').value;
+  r.done=true; save();
+  if(r.night_declare){
+    document.getElementById('ni-decl-text').textContent=r.night_declare;
+    document.getElementById('ni-decl').classList.add('show');
+  }
+  setBtn('save-night','오늘 마무리 저장');
+  document.getElementById('db-'+cur).classList.add('done'); updateProg();
+}
+
+function updateProg(){const d=Object.values(recs).filter(r=>r.done).length;document.getElementById('prog-text').textContent=d+' / 20일';document.getElementById('prog-fill').style.width=(d/20*100)+'%';}
+
+// ── 호흡 ──
+let breathOn=false, breathCycle=0, breathTimer=null;
+
+function breathStart(){
+  if(breathOn) return;
+  breathOn=true; breathCycle=0;
+  document.getElementById('breath-start-btn').style.display='none';
+  document.getElementById('breath-stop-btn').style.display='inline-block';
+  runBreath();
+}
+
+function runBreath(){
+  if(!breathOn) return;
+  if(breathCycle>=3){
+    breathDone(); return;
+  }
+  breathCycle++;
+  const ring=document.getElementById('breath-ring');
+  const text=document.getElementById('breath-text');
+  const sub=document.getElementById('breath-sub');
+  const count=document.getElementById('breath-count');
+  count.textContent=breathCycle+' / 3회';
+
+  // 들이쉬기 4초
+  ring.className='breath-ring inhale';
+  text.textContent='들이쉬기'; sub.textContent='코로 (4초)';
+  breathTimer=setTimeout(()=>{
+    if(!breathOn) return;
+    // 멈추기 4초
+    ring.className='breath-ring hold';
+    text.textContent='멈추기'; sub.textContent='잠깐 (4초)';
+    breathTimer=setTimeout(()=>{
+      if(!breathOn) return;
+      // 내쉬기 8초
+      ring.className='breath-ring exhale';
+      text.textContent='내쉬기'; sub.textContent='입으로 (8초)';
+      breathTimer=setTimeout(()=>runBreath(), 8000);
+    },4000);
+  },4000);
+}
+
+function breathDone(){
+  breathOn=false;
+  const ring=document.getElementById('breath-ring');
+  const text=document.getElementById('breath-text');
+  const sub=document.getElementById('breath-sub');
+  ring.className='breath-ring done';
+  text.textContent='완료 ✓'; sub.textContent='명상으로 이동해요 🌿';
+  document.getElementById('breath-count').textContent='3회 완료!';
+  document.getElementById('breath-start-btn').style.display='inline-block';
+  document.getElementById('breath-stop-btn').style.display='none';
+  document.getElementById('breath-start-btn').textContent='▶ 다시 하기';
+}
+
+function breathStop(){
+  breathOn=false;
+  if(breathTimer) clearTimeout(breathTimer);
+  const ring=document.getElementById('breath-ring');
+  const text=document.getElementById('breath-text');
+  const sub=document.getElementById('breath-sub');
+  ring.className='breath-ring';
+  text.textContent='시작'; sub.textContent='버튼을 눌러요';
+  document.getElementById('breath-count').textContent='';
+  document.getElementById('breath-start-btn').style.display='inline-block';
+  document.getElementById('breath-start-btn').textContent='▶ 호흡 시작';
+  document.getElementById('breath-stop-btn').style.display='none';
+}
+
+// ── 명상 ──
+function showMedTab(tab,btn){
+  document.querySelectorAll('.med-tab').forEach(t=>t.classList.remove('active')); btn.classList.add('active');
+  document.querySelectorAll('.med-panel').forEach(p=>p.classList.remove('visible'));
+  document.getElementById('med-'+tab).classList.add('visible');
+  if(tab==='video')initVideo();
+}
+
+function renderGuide(idx){
+  const g=GUIDES[idx];
+  document.getElementById('guide-wk').textContent=g.wk;
+  document.getElementById('gn-cur').textContent=(idx+1)+'주차';
+  document.getElementById('gn-prev').disabled=idx===0;
+  document.getElementById('gn-next').disabled=idx===3;
+  const html=g.steps.map(s=>`<div class="gs-step"><div class="gs-title">${s.title}</div><div class="gs-text">${s.text}</div>${s.hint?`<div class="gs-hint">💡 ${s.hint}</div>`:''}</div>`).join('<hr style="border:none;border-top:1px dashed var(--div);margin:8px 0">');
+  document.getElementById('guide-text').innerHTML=html;
+}
+
+function changeGuide(dir){ttsStop();curGuide=Math.max(0,Math.min(3,curGuide+dir));renderGuide(curGuide);}
+
+// TTS — 모바일 완전 호환
+function ttsToggle(){
+  if(ttsOn){ttsStop();return;}
+  if(!window.speechSynthesis){
+    document.getElementById('tts-notice').style.display='block';
+    return;
+  }
+  // guide-text 비어있으면 먼저 렌더
+  const gt=document.getElementById('guide-text');
+  if(!gt||!gt.innerHTML.trim()) renderGuide(curGuide);
+
+  const g=GUIDES[curGuide];
+  const allTexts=[];
+  g.steps.forEach((s,i)=>{
+    allTexts.push({text:s.text, idx:i});
+  });
+  ttsOn=true;
+  document.getElementById('tts-play').style.display='none';
+  document.getElementById('tts-stop').style.display='inline-block';
+  document.getElementById('tts-stat').textContent='🔊 시작 중...';
+  document.getElementById('tts-notice').style.display='none';
+  speakNext(allTexts,0);
+}
+
+function speakNext(list,i){
+  if(!ttsOn||i>=list.length){ttsStop();return;}
+  const item=list[i];
+  const u=new SpeechSynthesisUtterance(item.text);
+  u.lang='ko-KR'; u.rate=0.85; u.pitch=1; u.volume=1;
+  u.onstart=()=>{
+    document.getElementById('tts-stat').textContent='🔊 '+(i+1)+' / '+list.length;
+    document.querySelectorAll('.gs-step').forEach((el,j)=>el.classList.toggle('tts-on',j===item.idx));
+  };
+  u.onend=()=>{
+    setTimeout(()=>speakNext(list,i+1),1500);
+  };
+  u.onerror=()=>{
+    setTimeout(()=>speakNext(list,i+1),500);
+  };
+  speechSynthesis.speak(u);
+}
+
+function ttsStop(){
+  speechSynthesis.cancel();
+  ttsOn=false; ttsSteps=[]; ttsIdx=0;
+  const play=document.getElementById('tts-play');
+  const stop=document.getElementById('tts-stop');
+  const stat=document.getElementById('tts-stat');
+  if(play) play.style.display='inline-block';
+  if(stop) stop.style.display='none';
+  if(stat) stat.textContent='';
+  document.querySelectorAll('.gs-step').forEach(el=>el.classList.remove('tts-on'));
+}
+
+// 영상 (경현님이 공유해주신 정확한 링크)
+function initVideo(){
+  // DAY에 맞는 주차 자동 선택 (0=신체,1=수면은 1주차, 2=2주차, 3=3주차, 4=4주차)
+  const wi=cur<5?0:cur<10?2:cur<15?3:4;
+  document.querySelectorAll('.vw-tab').forEach((t,i)=>t.classList.toggle('active',i===wi));
+  showVideo(wi,null);
+}
+function showVideo(idx,btn){
+  if(btn){document.querySelectorAll('.vw-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');}
+  const v=VIDEOS[idx];
+  document.getElementById('vc-title').textContent=v.title;
+  document.getElementById('vc-desc').textContent=v.desc;
+  document.getElementById('vc-btn').href=`https://www.youtube.com/watch?v=${v.id}`;
+}
+
+function fillText(id, el) {
+  const ta = document.getElementById(id);
+  if(ta) { ta.value = el.textContent.trim(); cc(id, id.replace('ans-','c-').replace('m-who','m-who-c').replace('m-intent','m-intent-c').replace('ev-action','c-ea').replace('night-declare','c-nd')); ta.focus(); }
+}
+function appendText(id, el) {
+  const ta = document.getElementById(id);
+  if(ta) { ta.value = el.textContent.trim(); cc(id,'m-who-c'); if(id==='m-intent') cc(id,'m-intent-c'); ta.focus(); }
+}
+
+function cc(tid,cid){
+  const el=document.getElementById(tid),cl=document.getElementById(cid);
+  if(el&&cl)cl.textContent=el.value.length+'자';
+}
+
+init();
+</script>
+</body>
+</html>
